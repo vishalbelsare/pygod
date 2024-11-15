@@ -1,6 +1,7 @@
 from random import choice
-from pygod.models import *
+from pygod.detector import *
 from pyod.models.lof import LOF
+from torch_geometric.nn import MLP
 from sklearn.ensemble import IsolationForest
 
 
@@ -33,11 +34,7 @@ def init_model(args):
     else:
         hid_dim = [32, 64, 128, 256]
 
-    if args.dataset[:3] == 'inj' or args.dataset[:3] == 'gen':
-        # auto balancing on injected dataset
-        alpha = [None]
-    else:
-        alpha = [0.8, 0.5, 0.2]
+    alpha = [0.8, 0.5, 0.2]
 
     if model_name == "adone":
         return AdONE(hid_dim=choice(hid_dim),
@@ -69,7 +66,7 @@ def init_model(args):
                      lr=choice(lr),
                      epoch=epoch,
                      gpu=gpu,
-                     alpha=choice(alpha),
+                     weight=choice(alpha),
                      batch_size=batch_size,
                      num_neigh=num_neigh)
     elif model_name == 'dominant':
@@ -79,7 +76,7 @@ def init_model(args):
                         lr=choice(lr),
                         epoch=epoch,
                         gpu=gpu,
-                        alpha=choice(alpha),
+                        weight=choice(alpha),
                         batch_size=batch_size,
                         num_neigh=num_neigh)
     elif model_name == 'done':
@@ -99,18 +96,18 @@ def init_model(args):
                     lr=choice(lr),
                     epoch=epoch,
                     gpu=gpu,
-                    alpha=choice(alpha),
+                    weight=choice(alpha),
                     batch_size=batch_size,
                     num_neigh=num_neigh)
     elif model_name == 'gcnae':
-        return GCNAE(hid_dim=choice(hid_dim),
-                     weight_decay=weight_decay,
-                     dropout=choice(dropout),
-                     lr=choice(lr),
-                     epoch=epoch,
-                     gpu=gpu,
-                     batch_size=batch_size,
-                     num_neigh=num_neigh)
+        return GAE(hid_dim=choice(hid_dim),
+                   weight_decay=weight_decay,
+                   dropout=choice(dropout),
+                   lr=choice(lr),
+                   epoch=epoch,
+                   gpu=gpu,
+                   batch_size=batch_size,
+                   num_neigh=num_neigh)
     elif model_name == 'guide':
         return GUIDE(a_hid=choice(hid_dim),
                      s_hid=choice([4, 5, 6]),
@@ -124,13 +121,14 @@ def init_model(args):
                      num_neigh=num_neigh,
                      cache_dir='./tmp')
     elif model_name == "mlpae":
-        return MLPAE(hid_dim=choice(hid_dim),
-                     weight_decay=weight_decay,
-                     dropout=choice(dropout),
-                     lr=choice(lr),
-                     epoch=epoch,
-                     gpu=gpu,
-                     batch_size=batch_size)
+        return GAE(hid_dim=choice(hid_dim),
+                   weight_decay=weight_decay,
+                   dropout=choice(dropout),
+                   lr=choice(lr),
+                   epoch=epoch,
+                   gpu=gpu,
+                   batch_size=batch_size,
+                   backbone=MLP)
     elif model_name == 'lof':
         return LOF()
     elif model_name == 'if':
